@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0b1022">
+<link rel="manifest" href="manifest.webmanifest">
+<title>NOVA AI</title>
+<style>
+:root{color-scheme:dark;--bg:#0b1022;--panel:#151e38;--accent:#9886ff;--muted:#aab2d0}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at top,#292454 0,#0b1022 52%);color:#f7f6ff;font:16px system-ui;min-height:100dvh}
+.app{max-width:760px;margin:auto;height:100dvh;display:flex;flex-direction:column;padding:env(safe-area-inset-top) 14px env(safe-area-inset-bottom)}
+header{display:flex;align-items:center;gap:12px;padding:15px 3px;border-bottom:1px solid #ffffff20}
+.logo{width:43px;height:43px;border-radius:14px;background:linear-gradient(135deg,#b29bff,#586de5);display:grid;place-items:center;font-size:25px}
+h1{font-size:21px;letter-spacing:1px;margin:0}.sub{font-size:11px;color:var(--muted)}.online{margin-left:auto;color:#8ee6b0;font-size:12px}
+main{flex:1;overflow:auto;padding:18px 2px;display:flex;flex-direction:column;gap:13px}
+.welcome{padding:18px;border-radius:20px;background:#ffffff0c;border:1px solid #ffffff18}
+.welcome h2{margin:0 0 7px;font-size:22px}.welcome p{margin:0;color:var(--muted);line-height:1.45;font-size:14px}
+.msg{max-width:88%;padding:12px 15px;border-radius:17px;white-space:pre-wrap;line-height:1.5;overflow-wrap:anywhere}
+.bot{background:#1a2543;align-self:flex-start;border-bottom-left-radius:5px}
+.user{background:#5d50a6;align-self:flex-end;border-bottom-right-radius:5px}
+.controls{padding:10px 0 12px}.settings{display:flex;gap:8px;align-items:center;margin-bottom:9px}
+select{background:#1a2543;color:white;border:1px solid #ffffff25;border-radius:12px;padding:8px;max-width:50%}
+.voicehint{font-size:11px;color:var(--muted);margin-left:auto}
+.row{display:flex;gap:8px;padding:8px;background:#151e38;border:1px solid #ffffff22;border-radius:18px}
+input{min-width:0;flex:1;background:transparent;color:white;border:0;outline:0;font:inherit;padding:9px}
+button{border:0;color:white;cursor:pointer;font:inherit}
+.btn{border-radius:13px;background:#303b61;padding:0 13px;min-height:43px}
+.send{background:linear-gradient(135deg,#9b89ff,#647de8);font-weight:700}
+footer{text-align:center;color:#828baa;font-size:10px;padding:0 0 8px}
+</style>
+</head>
+<body>
+<div class="app">
+<header><div class="logo">✦</div><div><h1>NOVA AI</h1><div class="sub">YOUR SMART AI COMPANION</div></div><div class="online">● Ready</div></header>
+<main id="chat">
+<section class="welcome"><h2>Hello, welcome to NOVA AI! ✨</h2><p>Your personal assistant prototype. Ask a question, type in Hindi or English, or try the microphone. Choose a voice below to hear demo replies.</p></section>
+<div class="msg bot">Hi! I’m NOVA. I’m ready to help. What would you like to talk about?</div>
+</main>
+<section class="controls">
+<div class="settings">
+<select id="voice"><option value="female">Female voice</option><option value="male">Male voice</option></select>
+<select id="lang"><option value="en-IN">English (India)</option><option value="hi-IN">Hindi</option></select>
+<button class="btn" id="install" hidden>Install app</button>
+<span class="voicehint" id="hint">Demo assistant</span>
+</div>
+<div class="row">
+<button class="btn" id="mic" aria-label="Voice input">🎙️</button>
+<input id="message" placeholder="Message NOVA..." autocomplete="off">
+<button class="btn send" id="send">➤</button>
+</div>
+</section>
+<footer>Prototype · Demo replies until an AI service is connected</footer>
+</div>
+<script>
+const chat=document.getElementById('chat'),input=document.getElementById('message'),hint=document.getElementById('hint');
+function add(t,who){let d=document.createElement('div');d.className='msg '+who;d.textContent=t;chat.append(d);chat.scrollTop=chat.scrollHeight;return d}
+function answer(q){let s=q.toLowerCase();
+ if(/^(hi|hello|hey|hlo)\b/.test(s))return 'Hello! Welcome to NOVA AI. How can I help you today?';
+ if(/study|exam|homework|padhai/.test(s))return 'Sure! Tell me your subject and topic. We can learn it step by step with simple explanations and practice questions.';
+ if(/name|who are you/.test(s))return 'I am NOVA AI, your smart assistant prototype.';
+ if(/thank/.test(s))return 'You’re welcome! I’m here to help.';
+ if(/science|fact/.test(s))return 'Fun fact: sunlight takes about 8 minutes and 20 seconds to reach Earth.';
+ return 'I received your message: “'+q+'”\\n\\nI’m currently in demo mode. To answer any new question like ChatGPT, the next step is connecting a real AI service. This prototype does not yet have that connection.';
+}
+function say(t){if(!('speechSynthesis'in window)){hint.textContent='Speech playback unavailable in this browser';return}
+ speechSynthesis.cancel();let u=new SpeechSynthesisUtterance(t);u.lang=document.getElementById('lang').value;
+ const voices=speechSynthesis.getVoices();let lang=u.lang.split('-')[0],v=voices.filter(x=>x.lang.toLowerCase().startsWith(lang));
+ let preferred=document.getElementById('voice').value;
+ let selected=v.find(x=>preferred==='female'?/female|woman|zira|samantha|susan/i.test(x.name):/male|man|david|mark|daniel/i.test(x.name));
+ if(selected)u.voice=selected;else u.pitch=preferred==='female'?1.25:0.82;
+ speechSynthesis.speak(u);
+}
+function send(){let q=input.value.trim();if(!q)return;add(q,'user');input.value='';setTimeout(()=>{let a=answer(q);add(a,'bot');say(a)},300)}
+document.getElementById('send').onclick=send;input.addEventListener('keydown',e=>{if(e.key==='Enter')send()});
+document.getElementById('mic').onclick=()=>{let SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR){hint.textContent='Voice input needs a supported browser such as Chrome';return}
+ let r=new SR();r.lang=document.getElementById('lang').value;r.onstart=()=>hint.textContent='Listening…';r.onresult=e=>{input.value=e.results[0][0].transcript;hint.textContent='Voice captured';send()};r.onerror=()=>hint.textContent='Could not hear. Try again.';r.onend=()=>{if(hint.textContent==='Listening…')hint.textContent='Demo assistant'};r.start()};
+let deferred;const install=document.getElementById('install');window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferred=e;install.hidden=false});
+install.onclick=async()=>{if(deferred){deferred.prompt();await deferred.userChoice;deferred=null;install.hidden=true}};
+if('serviceWorker'in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
+</script>
+</body></html>
